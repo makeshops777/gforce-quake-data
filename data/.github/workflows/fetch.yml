@@ -1,0 +1,28 @@
+name: Fetch Quake Data
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # 5分ごとに実行
+  workflow_dispatch:       # 手動実行も可能
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch probes.json from NIED
+        run: |
+          curl -L -A "Mozilla/5.0" \
+          https://www.kmoni.bosai.go.jp/webservice/server/probes.json \
+          -o data/probes.json
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add data/probes.json
+          git diff --quiet && git diff --staged --quiet || git commit -m "Update probes.json"
+          git push
